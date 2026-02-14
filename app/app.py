@@ -1,10 +1,10 @@
 from fastapi import FastAPI, HTTPException, Form, Depends, status
-from app.db import Post, create_db_tables, get_async_session
+from app.db import create_db_tables, get_async_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from contextlib import asynccontextmanager
 from sqlalchemy import select
 from uuid import UUID, uuid4
-from app.schemas import PostCreate, PostResponse, DeleteRequest, UserRead, UserCreate, UserUpdate
+from app.schemas import UserRead, UserCreate, UserUpdate
 from app.users import auth_backend, current_active_user, fastapi_users, User
 
 
