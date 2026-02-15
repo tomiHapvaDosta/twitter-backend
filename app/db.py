@@ -16,6 +16,9 @@ class Base(DeclarativeBase):
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
     username = Column(Text, unique=True, nullable=False)
+    tweets = relationship('Tweet', back_populates='user')
+    
+    tweets = relationship('Tweet', back_populates='user')
     
 
 class Tweet(Base):

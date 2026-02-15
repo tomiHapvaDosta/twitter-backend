@@ -21,7 +21,7 @@ app.include_router(fastapi_users.get_reset_password_router(), prefix='/auth', ta
 app.include_router(fastapi_users.get_verify_router(UserRead), prefix='/auth', tags=['auth'])
 app.include_router(fastapi_users.get_users_router(UserRead, UserUpdate), prefix='/auth', tags=['users'])
 
-app.post('/tweets', status_code=status.HTTP_201_CREATED)
+@app.post('/tweets', status_code=status.HTTP_201_CREATED)
 async def post_tweet(
         tweet: TweetCreate,
         user: User = Depends(current_active_user),
@@ -39,7 +39,7 @@ async def post_tweet(
 
     return tweet
 
-app.get('/tweets')
+@app.get('/tweets')
 async def get_tweets(user: User = Depends(current_active_user),
                     session: AsyncSession = Depends(get_async_session)) -> list[TweetResponse]:
     result = await session.execute(select(Tweet).order_by(Tweet.created_at.desc()))
