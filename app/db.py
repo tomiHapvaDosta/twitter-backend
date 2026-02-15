@@ -15,21 +15,29 @@ class Base(DeclarativeBase):
     pass
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
-    posts = relationship('Post', back_populates='user')
+    username = Column(Text, unique=True, nullable=False)
     
 
-class Post(Base):
-    __tablename__ = 'posts'
+class Tweet(Base):
+    __tablename__ = 'tweets'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey('user.id'), nullable=False)
-    caption = Column(Text)
-    main_text = Column(Text, nullable=False)
+    title = Column(Text, unique=True, nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship('User', back_populates='tweets')
+    
+    
+class Like(Base):
+    __tablename__ = 'likes'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tweet_id = Column(UUID(as_uuid=True), ForeignKey('tweets.id'), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    user = relationship('User', back_populates='posts')
-    
-    
+    tweet = relationship('Tweet')
 
 engine = create_async_engine(DATABASE_URL)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)

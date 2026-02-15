@@ -2,12 +2,26 @@ from pydantic import BaseModel
 import uuid
 from datetime import datetime
 from fastapi_users import schemas
+from fastapi import Form
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
-    pass
+    username: str
 
 class UserCreate(schemas.BaseUserCreate):
-    pass
+    username: str
 
 class UserUpdate(schemas.BaseUserUpdate):
-    pass
+    username: str | None = None
+
+class TweetCreate(BaseModel):
+    title: str = Form('Title')
+    content: str
+
+class TweetResponse(BaseModel):
+    id: uuid.UUID
+    user_id: uuid.UUID
+    title: str
+    content: str
+    created_at: datetime
+    email: str
+
