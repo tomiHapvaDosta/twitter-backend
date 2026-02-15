@@ -27,17 +27,24 @@ async def post_tweet(
         user: User = Depends(current_active_user),
         session: AsyncSession = Depends(get_async_session)) -> TweetResponse:
     
-    tweet = Tweet(
+    tweet_obj = Tweet(
         user_id = user.id,
         content = tweet.content,
         title = tweet.title
     )
 
-    await session.add(tweet)
+    session.add(tweet_obj)
     await session.commit()
-    await session.refresh(tweet)
+    await session.refresh(tweet_obj)
 
-    return tweet
+    return TweetResponse(
+        id=tweet_obj.id,
+        user_id=tweet_obj.user_id,
+        title=tweet_obj.title,
+        content=tweet_obj.content,
+        created_at=tweet_obj.created_at,
+        email=user.email
+    )
 
 @app.get('/tweets')
 async def get_tweets(user: User = Depends(current_active_user),
