@@ -46,7 +46,7 @@ async def post_tweet(
         email=user.email
     )
 
-@app.get('/tweets')
+@app.get('/tweets', status_code=status.HTTP_200_OK)
 async def get_tweets(user: User = Depends(current_active_user),
                     session: AsyncSession = Depends(get_async_session)) -> list[TweetResponse]:
     result = await session.execute(select(Tweet).order_by(Tweet.created_at.desc()))
@@ -67,3 +67,21 @@ async def get_tweets(user: User = Depends(current_active_user),
         )
         for tweet in tweets
     ]
+
+@app.get('/tweets/{tweet_id}', status_code = status.HTTP_202_ACCEPTED)
+async def get_tweet(tweet_id: UUID,
+                    session: AsyncSession = Depends(get_async_session)) -> TweetResponse:
+    result = await session.execute(select(Tweet).filter_by(id=tweet_id))
+    tweet = result.scalars().first()
+
+    if tweet is None:
+        raise HTTPException(status_code=404, detail='Tweet not found... ')
+
+    return TweetResponse(
+        id=tweet.id,
+        user_id=tweet.user_id,
+        title=tweet.title,
+        content=tweet.content,
+        created_at=tweet.created_at,
+        email='email'
+    )
