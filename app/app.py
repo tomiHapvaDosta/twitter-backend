@@ -56,7 +56,14 @@ async def get_tweets(user: User = Depends(current_active_user),
     users = [row[0] for row in result.all()]
     user_dict = {u.id : u.email for u in users}
 
-    for tweet in tweets:
-        tweet['email'] = user_dict.get(tweet.user_id, 'Unknown user')
-
-    return tweets
+    return [
+        TweetResponse(
+            id=tweet.id,
+            user_id=tweet.user_id,
+            title=tweet.title,
+            content=tweet.content,
+            created_at=tweet.created_at,
+            email=user_dict.get(tweet.user_id, 'Unknown user')
+        )
+        for tweet in tweets
+    ]
