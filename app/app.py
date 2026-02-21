@@ -86,7 +86,7 @@ async def patch_tweet(tweet_id: UUID, tweet: TweetPatchRequest, user: User = Dep
 
     return tweet_obj
 
-@app.delete('/tweets/{tweet_id}')
+@app.delete('/tweets/{tweet_id}', status_code=status.HTTP_202_ACCEPTED)
 async def delete_tweet(tweet_id: UUID,
                        session: AsyncSession = Depends(get_async_session),
                        user: User = Depends(current_active_user)):
@@ -100,3 +100,33 @@ async def delete_tweet(tweet_id: UUID,
     await session.commit()
     
     return tweet_obj
+
+@app.post('/tweets/{tweet_id}/like', status_code=status.HTTP_201_CREATED)
+async def like_tweet(tweet_id: UUID,
+               session: AsyncSession = Depends(get_async_session),
+               user: User = Depends(current_active_user)):
+    
+    like_obj = Like(
+        tweet_id = tweet_id
+    )
+    session.add(like_obj)
+    await session.commit()
+    await session.refresh(like_obj)
+
+    return {'message': 'Tweet liked... '}
+
+@app.delete('/tweets/{tweet_id}/dislike', status_code=status.HTTP_202_ACCEPTED)
+async def dislike_tweet(tweet_id: UUID,
+                        session: AsyncSession = Depends(get_async_session),
+                        user: User = Depends(current_active_user)):
+    
+    result = await session.execute(select(Like).where(Like.tweet_id == tweet_id))
+    like = result.scalars().first()
+
+    if not like:
+        raise HTTPException(status_code=404, detail='Like of a tweet not found... ')
+    
+    await session.delete(like)
+    await session.commit()
+    
+    return {'message': 'Like deleted... '}
