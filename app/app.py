@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from contextlib import asynccontextmanager
 from sqlalchemy import select
 from uuid import UUID, uuid4
-from app.schemas import UserRead, UserCreate, UserUpdate, TweetCreate, TweetResponse
+from app.schemas import UserRead, UserCreate, UserUpdate, TweetPostRequest, TweetResponse, TweetPatchRequest
 from app.users import auth_backend, current_active_user, fastapi_users, User
 
 
@@ -23,7 +23,7 @@ app.include_router(fastapi_users.get_users_router(UserRead, UserUpdate), prefix=
 
 @app.post('/tweets', status_code=status.HTTP_201_CREATED)
 async def post_tweet(
-        tweet: TweetCreate,
+        tweet: TweetPostRequest,
         user: User = Depends(current_active_user),
         session: AsyncSession = Depends(get_async_session)) -> TweetResponse:
     
@@ -83,5 +83,31 @@ async def get_tweet(tweet_id: UUID,
         title=tweet.title,
         content=tweet.content,
         created_at=tweet.created_at,
+        email='email'
+    )
+
+@app.patch('/tweets/{tweet_id}')
+async def patch_tweet(tweet_id: UUID, tweet: TweetPatchRequest, user: User = Depends(current_active_user),
+                session: AsyncSession = Depends(get_async_session)) -> TweetResponse:
+    
+    result = await session.execute(select(Tweet).filter_by(id=tweet_id))
+    tweet_obj = result.scalars().first()
+
+    if tweet_obj is None:
+        raise HTTPException(status_code=404, detail='Tweet not found... ')
+
+    for name, value in tweet.model_dump().items():
+        if value  is not None:
+            setattr(tweet_obj, name, value)
+    
+    await session.commit()
+    await session.refresh(tweet_obj)
+
+    return TweetResponse(
+        id=tweet_id,
+        user_id = tweet_obj.user_id,
+        title = tweet_obj.title,
+        content = tweet_obj.content,
+        created_at=tweet_obj.created_at,
         email='email'
     )

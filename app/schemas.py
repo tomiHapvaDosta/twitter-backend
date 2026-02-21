@@ -13,7 +13,7 @@ class UserCreate(schemas.BaseUserCreate):
 class UserUpdate(schemas.BaseUserUpdate):
     username: str | None = None
 
-class TweetCreate(BaseModel):
+class TweetPostRequest(BaseModel):
     title: str = Form('Title')
     content: str
 
@@ -24,4 +24,8 @@ class TweetResponse(BaseModel):
     content: str
     created_at: datetime
     email: str
+
+class TweetPatchRequest(BaseModel):
+    title: str | None = None
+    content: str | None = None
 
