@@ -23,7 +23,6 @@ class TweetResponse(BaseModel):
     title: str
     content: str
     created_at: datetime
-    email: str
 
 class TweetPatchRequest(BaseModel):
     title: str | None = None

@@ -18,8 +18,6 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     username = Column(Text, unique=True, nullable=False)
     tweets = relationship('Tweet', back_populates='user')
     
-    tweets = relationship('Tweet', back_populates='user')
-    
 
 class Tweet(Base):
     __tablename__ = 'tweets'
@@ -31,6 +29,7 @@ class Tweet(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship('User', back_populates='tweets')
+    likes = relationship('Like', back_populates='tweet')
     
     
 class Like(Base):
@@ -40,7 +39,7 @@ class Like(Base):
     tweet_id = Column(UUID(as_uuid=True), ForeignKey('tweets.id'), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    tweet = relationship('Tweet')
+    tweet = relationship('Tweet', back_populates='likes')
 
 engine = create_async_engine(DATABASE_URL)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)

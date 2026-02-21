@@ -53,40 +53,21 @@ async def get_tweets(user: User = Depends(current_active_user),
     tweets = [row[0] for row in result.all()]
 
     result = await session.execute(select(User))
-    users = [row[0] for row in result.all()]
-    user_dict = {u.id : u.email for u in users}
 
-    return [
-        TweetResponse(
-            id=tweet.id,
-            user_id=tweet.user_id,
-            title=tweet.title,
-            content=tweet.content,
-            created_at=tweet.created_at,
-            email=user_dict.get(tweet.user_id, 'Unknown user')
-        )
-        for tweet in tweets
-    ]
+    return tweets
 
 @app.get('/tweets/{tweet_id}', status_code = status.HTTP_202_ACCEPTED)
 async def get_tweet(tweet_id: UUID,
                     session: AsyncSession = Depends(get_async_session)) -> TweetResponse:
     result = await session.execute(select(Tweet).filter_by(id=tweet_id))
-    tweet = result.scalars().first()
+    tweet_obj = result.scalars().first()
 
-    if tweet is None:
+    if tweet_obj is None:
         raise HTTPException(status_code=404, detail='Tweet not found... ')
 
-    return TweetResponse(
-        id=tweet.id,
-        user_id=tweet.user_id,
-        title=tweet.title,
-        content=tweet.content,
-        created_at=tweet.created_at,
-        email='email'
-    )
+    return tweet_obj
 
-@app.patch('/tweets/{tweet_id}')
+@app.patch('/tweets/{tweet_id}', status_code=status.HTTP_202_ACCEPTED)
 async def patch_tweet(tweet_id: UUID, tweet: TweetPatchRequest, user: User = Depends(current_active_user),
                 session: AsyncSession = Depends(get_async_session)) -> TweetResponse:
     
@@ -103,11 +84,19 @@ async def patch_tweet(tweet_id: UUID, tweet: TweetPatchRequest, user: User = Dep
     await session.commit()
     await session.refresh(tweet_obj)
 
-    return TweetResponse(
-        id=tweet_id,
-        user_id = tweet_obj.user_id,
-        title = tweet_obj.title,
-        content = tweet_obj.content,
-        created_at=tweet_obj.created_at,
-        email='email'
-    )
+    return tweet_obj
+
+@app.delete('/tweets/{tweet_id}')
+async def delete_tweet(tweet_id: UUID,
+                       session: AsyncSession = Depends(get_async_session),
+                       user: User = Depends(current_active_user)):
+    result = await session.execute(select(Tweet).filter_by(id=tweet_id))
+    tweet_obj = result.scalars().first()
+
+    if not tweet_obj:
+        raise HTTPException(status_code=404, detail='Tweet not found... ')
+    
+    await session.delete(tweet_obj)
+    await session.commit()
+    
+    return tweet_obj
