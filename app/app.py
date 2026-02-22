@@ -6,7 +6,7 @@ from sqlalchemy import select
 from uuid import UUID, uuid4
 from app.schemas import UserRead, UserCreate, UserUpdate, TweetPostRequest, TweetResponse, TweetPatchRequest
 from app.users import auth_backend, current_active_user, fastapi_users, User
-
+from datetime import datetime
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -130,3 +130,12 @@ async def dislike_tweet(tweet_id: UUID,
     await session.commit()
     
     return {'message': 'Like deleted... '}
+
+@app.get('/tweets/timeline', status_code=status.HTTP_202_ACCEPTED)
+async def get_timeline(session: AsyncSession = Depends(get_async_session),
+                 user: User = Depends(current_active_user)) -> list[datetime]:
+    result = await session.execute(select(Tweet.created_at).order_by(Tweet.created_at.desc()))
+
+    dates = result.scalars().all()
+
+    return dates
